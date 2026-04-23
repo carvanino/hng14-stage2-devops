@@ -23,6 +23,6 @@ USER node
 EXPOSE 3000
 
 # Healthcheck to ensure the container is actually running properly
-HEALTHCHECK CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+HEALTHCHECK CMD node -e "require('http').get('http://localhost:3000/', r => process.exit(r.statusCode < 400 ? 0 : 1)).on('error', () => process.exit(1))"
 
 CMD ["node", "app.js"]

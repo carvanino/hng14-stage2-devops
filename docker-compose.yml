@@ -64,9 +64,7 @@ services:
       - API_HOST=api
       - API_PORT=8000
       - PORT=3000
-    # The frontend is the ONLY thing we expose to the host machine
-    ports:
-      - "3000:3000"
+    # No host port binding — nginx owns the exposed port
     networks:
       - internal_net
     depends_on:
@@ -77,3 +75,20 @@ services:
         limits:
           cpus: "0.5"
           memory: "256M"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "3000:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - internal_net
+    depends_on:
+      - frontend
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "0.25"
+          memory: "64M"
