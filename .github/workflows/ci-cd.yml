@@ -76,6 +76,41 @@ jobs:
           docker push localhost:5000/frontend:latest
 
       # --- SECURITY SCAN STAGE ---
+      # Step 1: Show findings in the log (no exit code) so we can see what's flagged
+      - name: Trivy scan report (API)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          image-ref: 'localhost:5000/api:latest'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '0'
+          ignore-unfixed: true
+        env:
+          TRIVY_INSECURE: "true"
+
+      - name: Trivy scan report (Worker)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          image-ref: 'localhost:5000/worker:latest'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '0'
+          ignore-unfixed: true
+        env:
+          TRIVY_INSECURE: "true"
+
+      - name: Trivy scan report (Frontend)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          image-ref: 'localhost:5000/frontend:latest'
+          format: 'table'
+          severity: 'CRITICAL'
+          exit-code: '0'
+          ignore-unfixed: true
+        env:
+          TRIVY_INSECURE: "true"
+
+      # Step 2: Save SARIF for GitHub Security tab and enforce the gate
       - name: Run Trivy vulnerability scanner on API
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
