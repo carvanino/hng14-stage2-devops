@@ -1,4 +1,4 @@
-FROM python:3.9-alpine AS builder
+FROM python:3.12-alpine AS builder
 
 WORKDIR /app
 
@@ -6,7 +6,7 @@ COPY requirements.txt .
 
 RUN pip install --no-cache-dir --user -r requirements.txt
 
-FROM python:3.9-alpine
+FROM python:3.12-alpine
 
 # Create the non-root user first
 RUN adduser -D appuser
