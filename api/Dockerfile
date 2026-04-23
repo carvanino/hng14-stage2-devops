@@ -8,6 +8,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM python:3.9-slim
 
+# Patch the OS vulnerabilities
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
 # Create the non-root user first
 RUN useradd -m appuser
 
