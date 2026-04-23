@@ -77,7 +77,7 @@ jobs:
 
       # --- SECURITY SCAN STAGE ---
       - name: Run Trivy vulnerability scanner on API
-        uses: aquasecurity/trivy-action@57a97c7  # v0.35.0 - SHA-pinned (safe post supply-chain attack)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           image-ref: 'localhost:5000/api:latest'
           format: 'sarif'
@@ -89,7 +89,7 @@ jobs:
           TRIVY_INSECURE: "true"
 
       - name: Run Trivy vulnerability scanner on Worker
-        uses: aquasecurity/trivy-action@57a97c7  # v0.35.0 - SHA-pinned (safe post supply-chain attack)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           image-ref: 'localhost:5000/worker:latest'
           format: 'sarif'
@@ -101,7 +101,7 @@ jobs:
           TRIVY_INSECURE: "true"
 
       - name: Run Trivy vulnerability scanner on Frontend
-        uses: aquasecurity/trivy-action@57a97c7  # v0.35.0 - SHA-pinned (safe post supply-chain attack)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           image-ref: 'localhost:5000/frontend:latest'
           format: 'sarif'
