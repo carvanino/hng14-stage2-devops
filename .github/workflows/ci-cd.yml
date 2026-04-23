@@ -29,11 +29,20 @@ jobs:
           pip install flake8
           flake8 api/main.py worker/worker.py
 
-      - name: Lint Dockerfiles
+      - name: Lint API Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:
-          dockerfile: "api/Dockerfile frontend/Dockerfile worker/Dockerfile"
-          ignore: DL3008
+          dockerfile: "api/Dockerfile"
+
+      - name: Lint Worker Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "worker/Dockerfile"
+
+      - name: Lint Frontend Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "frontend/Dockerfile"
 
       # --- TEST STAGE ---
       - name: Install Test Dependencies
