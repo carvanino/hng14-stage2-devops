@@ -8,6 +8,9 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM python:3.12-alpine3.21
 
+# Upgrade OS packages to pick up any security patches (e.g. libcrypto3, libssl3)
+RUN apk upgrade --no-cache
+
 # Create the non-root user first
 RUN adduser -D appuser
 

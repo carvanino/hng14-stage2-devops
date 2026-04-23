@@ -10,6 +10,9 @@ RUN npm ci
 FROM node:18-alpine3.21
 WORKDIR /app
 
+# Upgrade OS packages to pick up any security patches (e.g. libcrypto3, libssl3)
+RUN apk upgrade --no-cache
+
 # Copy the installed dependencies from the builder stage
 COPY --from=builder /app/node_modules ./node_modules
 # Copy the rest of the application code
