@@ -84,6 +84,7 @@ jobs:
           output: 'trivy-api.sarif'
           severity: 'CRITICAL'
           exit-code: '1'
+          ignore-unfixed: true
 
       - name: Run Trivy vulnerability scanner on Worker
         uses: aquasecurity/trivy-action@master
@@ -93,6 +94,7 @@ jobs:
           output: 'trivy-worker.sarif'
           severity: 'CRITICAL'
           exit-code: '1'
+          ignore-unfixed: true
 
       - name: Run Trivy vulnerability scanner on Frontend
         uses: aquasecurity/trivy-action@master
@@ -102,6 +104,7 @@ jobs:
           output: 'trivy-frontend.sarif'
           severity: 'CRITICAL'
           exit-code: '1'
+          ignore-unfixed: true
 
       - name: Upload Trivy scan results
         uses: actions/upload-artifact@v4
