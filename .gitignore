@@ -1,0 +1,6 @@
+.env
+venv/
+api/venv/
+worker/venv/
+node_modules/
+frontend/node_modules/

@@ -1,0 +1,154 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      registry:
+        image: registry:2
+        ports:
+          - 5000:5000
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # --- LINT STAGE ---
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Lint Python Code
+        run: |
+          pip install flake8
+          flake8 api/main.py worker/worker.py
+
+      - name: Lint Dockerfiles
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "api/Dockerfile frontend/Dockerfile worker/Dockerfile"
+          ignore: DL3008
+
+      # --- TEST STAGE ---
+      - name: Install Test Dependencies
+        run: |
+          pip install pytest pytest-cov httpx fakeredis
+          pip install -r api/requirements.txt
+
+      - name: Run Unit Tests
+        run: |
+          pytest --cov=api api/test_main.py --cov-report=xml
+
+      - name: Upload Coverage
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: coverage.xml
+
+      # --- BUILD STAGE ---
+      - name: Build and Push to Local Registry
+        run: |
+          # Build images
+          docker build -t localhost:5000/api:latest -t localhost:5000/api:${{ github.sha }} ./api
+          docker build -t localhost:5000/worker:latest -t localhost:5000/worker:${{ github.sha }} ./worker
+          docker build -t localhost:5000/frontend:latest -t localhost:5000/frontend:${{ github.sha }} ./frontend
+          
+          # Push images to the local registry service we set up above
+          docker push localhost:5000/api:latest
+          docker push localhost:5000/worker:latest
+          docker push localhost:5000/frontend:latest
+
+      # --- SECURITY SCAN STAGE ---
+      - name: Run Trivy vulnerability scanner on API
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'localhost:5000/api:latest'
+          format: 'sarif'
+          output: 'trivy-api.sarif'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+      - name: Run Trivy vulnerability scanner on Worker
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'localhost:5000/worker:latest'
+          format: 'sarif'
+          output: 'trivy-worker.sarif'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+      - name: Run Trivy vulnerability scanner on Frontend
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'localhost:5000/frontend:latest'
+          format: 'sarif'
+          output: 'trivy-frontend.sarif'
+          severity: 'CRITICAL'
+          exit-code: '1'
+
+      - name: Upload Trivy scan results
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: trivy-results
+          path: '*.sarif'
+
+      # --- INTEGRATION TEST STAGE ---
+      - name: Run Integration Tests
+        run: |
+          # 1. Create a dummy .env file so docker-compose doesn't fail
+          cp .env.example .env
+          
+          # 2. Stand up the whole stack in the background
+          docker compose up -d
+          
+          # 3. Wait for everything to become healthy (docker compose healthchecks)
+          sleep 20 
+          
+          # 4. Hit the frontend, grab the ID, poll the API until status is 'completed'
+          response=$(curl -s -X POST http://localhost:3000/submit)
+          JOB_ID=$(echo $response | jq -r .job_id)
+          echo "Submitted Job: $JOB_ID"
+          
+          # Poll until status is 'completed'
+          for i in {1..15}; do
+            status=$(curl -s "http://localhost:3000/status/$JOB_ID" | jq -r .status)
+            if [ "$status" = "completed" ]; then
+              echo "Job completed successfully!"
+              exit 0
+            fi
+            echo "Job status is $status... waiting."
+            sleep 2
+          done
+          
+          echo "Job failed to complete in time."
+          exit 1
+          
+
+      - name: Teardown Stack
+        if: always() # Ensure we tear down even if tests fail
+        run: docker compose down
+
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run Scripted Rolling Update
+        run: |
+          cp .env.example .env
+          docker compose up -d
+          
+          chmod +x deploy.sh
+          ./deploy.sh api
+          ./deploy.sh worker
+          ./deploy.sh frontend
