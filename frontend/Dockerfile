@@ -1,5 +1,5 @@
 # --- STAGE 1: Builder ---
-FROM node:18-alpine AS builder
+FROM node:18-alpine3.21 AS builder
 WORKDIR /app
 # Copy only package files first to leverage Docker caching
 COPY package*.json ./
@@ -7,7 +7,7 @@ COPY package*.json ./
 RUN npm ci
 
 # --- STAGE 2: Runtime ---
-FROM node:18-alpine
+FROM node:18-alpine3.21
 WORKDIR /app
 
 # Copy the installed dependencies from the builder stage
