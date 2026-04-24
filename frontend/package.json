@@ -12,5 +12,15 @@
   },
   "devDependencies": {
     "eslint": "^8.57.0"
+  },
+  "eslintConfig": {
+    "env": {
+      "node": true,
+      "es2021": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "ecmaVersion": "latest"
+    }
   }
 }
