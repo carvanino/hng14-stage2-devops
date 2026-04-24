@@ -10,15 +10,16 @@ RUN npm ci
 FROM node:18-alpine3.21
 WORKDIR /app
 
-# Upgrade OS packages to pick up any security patches (e.g. libcrypto3, libssl3)
+# Upgrade OS packages and create non-root user
 RUN apk upgrade --no-cache
+# hadolint ignore=DL3059
+RUN adduser -D appuser
 
 COPY --from=builder /app/node_modules ./node_modules
 # Copy the rest of the application code
-COPY --chown=node:node . .
+COPY --chown=appuser:appuser . .
 
-# Switch to the built-in non-root user for security
-USER node
+USER appuser
 
 EXPOSE 3000
 

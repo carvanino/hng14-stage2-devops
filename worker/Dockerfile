@@ -8,8 +8,10 @@ RUN pip install --no-cache-dir --user -r requirements.txt
 
 FROM python:3.12-alpine3.21
 
-# Upgrade OS packages and create non-root user
-RUN apk upgrade --no-cache && adduser -D appuser
+# Upgrade OS packages
+RUN apk upgrade --no-cache
+# hadolint ignore=DL3059
+RUN adduser -D appuser
 
 WORKDIR /app
 
