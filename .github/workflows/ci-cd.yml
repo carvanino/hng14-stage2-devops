@@ -29,6 +29,12 @@ jobs:
           pip install flake8
           flake8 api/main.py worker/worker.py
 
+      - name: Lint JavaScript Code
+        run: |
+          cd frontend
+          npm install
+          npm run lint
+
       - name: Lint API Dockerfile
         uses: hadolint/hadolint-action@v3.1.0
         with:
@@ -43,6 +49,11 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: "frontend/Dockerfile"
+
+      - name: Lint Nginx Dockerfile
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: "nginx/Dockerfile"
 
       # --- TEST STAGE ---
       - name: Install Test Dependencies
@@ -69,11 +80,13 @@ jobs:
           docker build -t localhost:5000/api:latest -t localhost:5000/api:${{ github.sha }} ./api
           docker build -t localhost:5000/worker:latest -t localhost:5000/worker:${{ github.sha }} ./worker
           docker build -t localhost:5000/frontend:latest -t localhost:5000/frontend:${{ github.sha }} ./frontend
+          docker build -t localhost:5000/nginx:latest -t localhost:5000/nginx:${{ github.sha }} ./nginx
           
           # Push images to the local registry service we set up above
           docker push localhost:5000/api:latest
           docker push localhost:5000/worker:latest
           docker push localhost:5000/frontend:latest
+          docker push localhost:5000/nginx:latest
 
       # --- SECURITY SCAN STAGE ---
       # Step 1: Generate SARIF reports for the GitHub Security tab (never blocks the pipeline)
@@ -116,6 +129,19 @@ jobs:
         env:
           TRIVY_INSECURE: "true"
 
+      - name: Generate Trivy SARIF (Nginx)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          image-ref: 'localhost:5000/nginx:latest'
+          format: 'sarif'
+          output: 'trivy-nginx.sarif'
+          scanners: 'vuln'
+          severity: 'CRITICAL'
+          exit-code: '0'
+          ignore-unfixed: true
+        env:
+          TRIVY_INSECURE: "true"
+
       # Step 2: Enforce the gate — table format prints findings to the log, exit-code: 1 blocks on CRITICAL
       - name: Trivy gate (API)
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
@@ -145,6 +171,18 @@ jobs:
         uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
         with:
           image-ref: 'localhost:5000/frontend:latest'
+          format: 'table'
+          scanners: 'vuln'
+          severity: 'CRITICAL'
+          exit-code: '1'
+          ignore-unfixed: true
+        env:
+          TRIVY_INSECURE: "true"
+
+      - name: Trivy gate (Nginx)
+        uses: aquasecurity/trivy-action@57a97c7e7821a5776cebc9bb87c984fa69cba8f1  # v0.35.0
+        with:
+          image-ref: 'localhost:5000/nginx:latest'
           format: 'table'
           scanners: 'vuln'
           severity: 'CRITICAL'
@@ -213,3 +251,4 @@ jobs:
           ./deploy.sh api
           ./deploy.sh worker
           ./deploy.sh frontend
+          ./deploy.sh nginx

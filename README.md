@@ -1,11 +1,11 @@
 # Stage 2 DevOps - Containerized Microservices
 
-This repository contains a containerized microservices application as part of the HNG Stage 2 DevOps task. The application consists of three services:
+This repository contains a containerized microservices application as part of the HNG Stage 2 DevOps task. The application consists of five services:
 1. **Frontend (Node.js)**: A web dashboard to submit and track jobs.
 2. **API (FastAPI/Python)**: A REST API that handles job creation and status updates.
 3. **Worker (Python)**: A background worker that pulls jobs from a queue and processes them.
-
-All services are glued together using a shared Redis instance and orchestrated via Docker Compose.
+4. **Redis**: A shared message queue and job state store between the API and worker.
+5. **Nginx**: A reverse proxy that sits in front of the frontend, enabling zero-downtime rolling updates.
 
 ## Prerequisites
 To run this application, you must have the following installed on your machine:
@@ -41,7 +41,7 @@ Once the command finishes building the images and starting the containers, you c
 ```bash
 sudo docker compose ps
 ```
-You should see 4 containers running (`redis`, `api`, `worker`, and `frontend`), and their status should eventually say `(healthy)`.
+You should see 5 containers running (`redis`, `api`, `worker`, `frontend`, and `nginx`), and their status should eventually say `(healthy)`.
 
 2. **Check the Frontend**: 
 Open your browser and navigate to `http://localhost:3000`. You should see the "Job Processor Dashboard". Click "Submit New Job" and watch the status update from "queued" to "completed".
