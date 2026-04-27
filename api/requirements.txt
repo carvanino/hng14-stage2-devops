@@ -1,7 +1,0 @@
-fastapi
-uvicorn
-redis
-pytest
-pytest-cov
-httpx
-fakeredis
