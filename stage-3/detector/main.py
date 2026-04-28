@@ -36,16 +36,14 @@ def main():
     dashboard = Dashboard(blocker, detector, baseline, start_time)
     dashboard.run(port=config['dashboard_port'])
 
-    # Baseline ticker — records global req/s every second
+    # Baseline ticker — records per-second request count every second
     def baseline_ticker():
         while True:
             time.sleep(1)
             with detector.lock:
-                count = detector.global_window.count()
-            baseline.record(count)
-            # Notify Slack when baseline recalculates
-            # baseline.record() updates last_recalc internally
-            # we check if a recalc just happened
+                per_second_count = detector.global_window.count_last_n_seconds(1)
+            baseline.record(per_second_count)
+            # Check if a recalculation just happened and log it
             if abs(time.time() - baseline.last_recalc) < 1:
                 audit.log(
                     'BASELINE_RECALC', '-', '',

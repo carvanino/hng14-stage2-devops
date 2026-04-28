@@ -57,3 +57,8 @@ class SlidingWindow:
     def rate(self):
         """Returns the average requests per second over the window."""
         return self.count() / self.window_seconds
+
+    def count_last_n_seconds(self, n=1):
+        """Returns the number of requests that arrived in the last n seconds."""
+        cutoff = time.time() - n
+        return sum(1 for ts in self.timestamps if ts >= cutoff)
