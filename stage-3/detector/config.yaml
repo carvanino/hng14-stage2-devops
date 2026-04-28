@@ -1,11 +1,11 @@
-audit_log: ./detector/audit.log
+# audit_log: ./detector/audit.log
 
 # Paths
 log_path:   /var/log/nginx/hng-access.log
-# audit_log:  /var/log/detector/audit.log
+audit_log:  /var/log/detector/audit.log
 
 # Dashboard
-dashboard_port: 8080
+dashboard_port: 8081
 
 error_rate_baseline_multiplier: 0.1
 

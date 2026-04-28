@@ -18,7 +18,7 @@ def main():
 
     """
     #  Load config ────────────────────────────────────────────
-    with open('detector/config.yaml') as f:
+    with open('config.yaml') as f:
         config = yaml.safe_load(f)
     
 
