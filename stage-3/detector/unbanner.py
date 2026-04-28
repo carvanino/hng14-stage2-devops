@@ -42,15 +42,23 @@ class Unbanner:
 
     def _unban(self, ip, info):
         """
-        Unbans an IP by removing the iptables rule and logging the unban action.
+        Unbans an IP by removing the iptables rule.
+        Preserves the IP's escalation level for future offences.
         """
         subprocess.run([
             "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP"
         ])
         next_level = info['level'] + 1
         next_duration = self.schedule[min(next_level, len(self.schedule) - 1)]
+
         with self.lock:
-            del self.banned_ips[ip]
+            # Keep IP in memory with escalated level but mark as inactive
+            self.banned_ips[ip] = {
+                'banned_at': None,
+                'level': next_level,
+                'duration': None,
+                'active': False
+            }
             print(f"Unblocked IP: {ip}")
 
         # Log and alert

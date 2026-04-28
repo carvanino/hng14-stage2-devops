@@ -31,7 +31,7 @@ class Dashboard:
         # Uptime in seconds
         uptime_seconds = int(time.time() - self.start_time)
 
-        # Banned IPs with their info
+        # Banned IPs with their info — only show actively banned ones
         with self.blocker.lock:
             banned = {
                 ip: {
@@ -45,6 +45,7 @@ class Dashboard:
                     )
                 }
                 for ip, info in self.blocker.banned_ips.items()
+                if info.get('active', False)   # only actively banned IPs
             }
 
         # Top 10 source IPs by request count

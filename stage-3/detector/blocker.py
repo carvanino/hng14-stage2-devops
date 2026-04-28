@@ -25,28 +25,33 @@ class Blocker:
     def block_ip(self, ip, condition, rate, baseline):
         """
         Bans an IP by adding an iptables DROP rule.
-        Skips if already banned.
+        Skips if already actively banned.
+        Preserves ban level from previous offences.
         """
-        duration = 0
         with self.lock:
-            if ip not in self.banned_ips:
-                # What level (count) is this IP at ?
-                level = self.banned_ips.get(ip, {}).get('level', 0)
-                # get the set duration for IP current level 
-                duration = self.schedule[min(level, len(self.schedule) - 1)]
+            current = self.banned_ips.get(ip, {})
 
-                subprocess.run([
-                    "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"
-                ])
+            # Skip if already actively banned
+            if current.get('active', False):
+                return
 
-                self.banned_ips[ip] = {
-                    'banned_at': time.time(),
-                    'level': level, 
-                    'duration': duration,
-                }
+            # Level carries over from previous bans — escalation is preserved
+            level = current.get('level', 0)
+            duration = self.schedule[min(level, len(self.schedule) - 1)]
 
-                print(f"Blocked IP: {ip}")
+            subprocess.run([
+                "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"
+            ])
 
-                # Log and alert
-                self.audit.log('BAN', ip, condition, rate, baseline, duration)
-                self.notifier.send_ban(ip, condition, rate, baseline, duration)
+            self.banned_ips[ip] = {
+                'banned_at': time.time(),
+                'level': level,
+                'duration': duration,
+                'active': True
+            }
+
+            print(f"Blocked IP: {ip}")
+
+            # Log and alert
+            self.audit.log('BAN', ip, condition, rate, baseline, duration)
+            self.notifier.send_ban(ip, condition, rate, baseline, duration)
