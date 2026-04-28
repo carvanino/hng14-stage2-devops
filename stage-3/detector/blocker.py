@@ -36,7 +36,7 @@ class Blocker:
                 duration = self.schedule[min(level, len(self.schedule) - 1)]
 
                 subprocess.run([
-                    "sudo", "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"
+                    "iptables", "-A", "INPUT", "-s", ip, "-j", "DROP"
                 ])
 
                 self.banned_ips[ip] = {

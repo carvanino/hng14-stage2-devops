@@ -45,7 +45,7 @@ class Unbanner:
         Unbans an IP by removing the iptables rule and logging the unban action.
         """
         subprocess.run([
-            "sudo", "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP"
+            "iptables", "-D", "INPUT", "-s", ip, "-j", "DROP"
         ])
         next_level = info['level'] + 1
         next_duration = self.schedule[min(next_level, len(self.schedule) - 1)]
