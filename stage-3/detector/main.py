@@ -1,3 +1,4 @@
+import os
 import time
 import threading
 import yaml
@@ -20,9 +21,11 @@ def main():
     #  Load config ────────────────────────────────────────────
     with open('config.yaml') as f:
         config = yaml.safe_load(f)
+
+    slack_webhook = os.environ.get('SLACK_WEBHOOK_URL') or config.get('slack_webhook')
     
 
-    notifier = Notifier(config.get('slack_webhook'))
+    notifier = Notifier(slack_webhook)
     audit = AuditLogger(config)
     baseline = BaselineEngine()
     detector = AnamolyDetector(baseline=baseline, config=config)
