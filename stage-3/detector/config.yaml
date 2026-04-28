@@ -1,0 +1,29 @@
+audit_log: ./detector/audit.log
+
+# Paths
+log_path:   /var/log/nginx/hng-access.log
+# audit_log:  /var/log/detector/audit.log
+
+# Dashboard
+dashboard_port: 8080
+
+error_rate_baseline_multiplier: 0.1
+
+# Detection thresholds
+thresholds:
+  z_score:                3.0
+  rate_multiplier:        5.0
+  error_rate_multiplier:  3.0
+  sliding_window_seconds: 60
+
+# Baseline settings
+baseline:
+  window_minutes:    30
+  recalc_interval:   60   # seconds
+
+# Unban backoff schedule (minutes, or 'permanent')
+unban_schedule:
+  - 10
+  - 30
+  - 120
+  - permanent
