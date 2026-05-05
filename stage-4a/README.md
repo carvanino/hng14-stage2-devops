@@ -234,4 +234,4 @@ curl -X POST http://localhost:8080/chaos \
 
 ## GitHub Repository
 
-[https://github.com/YOUR_USERNAME/YOUR_REPO](https://github.com/YOUR_USERNAME/YOUR_REPO)
+[https://github.com/carvanino/hng14-stage2-devops](https://github.com/carvanino/hng14-stage2-devops)
