@@ -1,0 +1,60 @@
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    log_format swiftdeploy '$time_iso8601 | $status | ${request_time}s | $upstream_addr | $request';
+    access_log /var/log/nginx/swiftdeploy-access.log swiftdeploy;
+
+    server {
+        listen {{ nginx_port }};
+
+        # Docker's internal DNS resolver
+        resolver 127.0.0.11 valid=30s;
+
+        # Adds SwiftDeploy header to every response
+        add_header X-Deployed-By swiftdeploy always;
+
+        # Forward X-Mode header from upstream
+        proxy_pass_header X-Mode;
+
+        # Timeouts from manifest
+        proxy_connect_timeout {{ proxy_timeout }}s;
+        proxy_send_timeout {{ proxy_timeout }}s;
+        proxy_read_timeout {{ proxy_timeout }}s;
+
+        location / {
+            set $upstream http://app:{{ service_port }};
+            proxy_pass $upstream;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        location @upstream_error {
+            default_type application/json;
+            add_header Content-Type application/json always;
+        }
+
+        error_page 502 = @error502;
+        error_page 503 = @error503;
+        error_page 504 = @error504;
+
+        location @error502 {
+            default_type application/json;
+            return 502 '{"error": "Bad Gateway", "code": 502, "service": "app", "contact": "admin@swiftdeploy.local"}';
+        }
+
+        location @error503 {
+            default_type application/json;
+            return 503 '{"error": "Service Unavailable", "code": 503, "service": "app", "contact": "admin@swiftdeploy.local"}';
+        }
+
+        location @error504 {
+            default_type application/json;
+            return 504 '{"error": "Gateway Timeout", "code": 504, "service": "app", "contact": "admin@swiftdeploy.local"}';
+        }
+    }
+}
