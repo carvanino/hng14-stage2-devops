@@ -46,3 +46,21 @@ services:
     depends_on:
       app:
         condition: service_healthy
+
+  opa:
+    image: openpolicyagent/opa:latest-static
+    container_name: swiftdeploy-opa
+    restart: unless-stopped
+    # Exposed to host so CLI can query it — NOT routed through Nginx
+    ports:
+      - "8181:8181"
+    volumes:
+      - ./policies:/policies:ro
+    networks:
+      - {{ network_name }}
+    command:
+      - "run"
+      - "--server"
+      - "--addr=0.0.0.0:8181"
+      - "--log-level=error"
+      - "/policies"
