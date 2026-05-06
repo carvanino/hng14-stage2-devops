@@ -220,7 +220,7 @@ def pre_deploy_check():
     print("\n  [Policy] Pre-deploy checks\n")
     disk         = shutil.disk_usage("/")
     disk_free_gb = disk.free / (1024 ** 3)
-    cpu_load     = os.getloadavg()[0]
+    cpu_load     = os.getloadavg()[0] / psutil.cpu_count()  # normalize per core
 
     info(f"Disk free: {disk_free_gb:.1f} GB")
     info(f"CPU load (1m): {cpu_load:.2f}")
@@ -486,7 +486,7 @@ def cmd_status():
                 print("\n  Policy Compliance:")
                 infra_result   = query_opa("infrastructure", {
                     "disk_free_gb": round(shutil.disk_usage("/").free / (1024**3), 2),
-                    "cpu_load":     round(os.getloadavg()[0], 2)
+                    "cpu_load":     round(os.getloadavg()[0] / psutil.cpu_count(), 2)
                 })
                 canary_result  = query_opa("canary", {
                     "error_rate":     round(error_rate, 4),
